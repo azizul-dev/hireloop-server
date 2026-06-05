@@ -28,14 +28,31 @@ async function run() {
     // Connect the client to the server	(optional starting in v4.7)
     await client.connect();
 
-    const database = client.db("hireloop_db");
+    const database = client.db("hire_loop_db");
     const jobCollection = database.collection("jobs");
+    const companyCollection = database.collection("companies");
 
-    app.get("/jobs", async (req, res) => {
+    app.get("/api/jobs", async (req, res) => {
+        const query = {};
+        if (req.query.companyId) {
+          query.companyId = req.query.companyId;
+        }
+        if (req.query.status) {
+          query.status = req.query.status;
+        }
+        const cursor = jobCollection.find(query);
+        const jobs = await cursor.toArray();
+        res.send(jobs);
+        
+    });
+
+    app.post("/api/jobs", async (req, res) => {
       const job = req.body;
       const result = await jobCollection.insertOne(job);
       res.send(result);
     });
+
+
 
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
