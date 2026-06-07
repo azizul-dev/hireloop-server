@@ -33,17 +33,16 @@ async function run() {
     const companyCollection = database.collection("companies");
 
     app.get("/api/jobs", async (req, res) => {
-        const query = {};
-        if (req.query.companyId) {
-          query.companyId = req.query.companyId;
-        }
-        if (req.query.status) {
-          query.status = req.query.status;
-        }
-        const cursor = jobCollection.find(query);
-        const jobs = await cursor.toArray();
-        res.send(jobs);
-        
+      const query = {};
+      if (req.query.companyId) {
+        query.companyId = req.query.companyId;
+      }
+      if (req.query.status) {
+        query.status = req.query.status;
+      }
+      const cursor = jobCollection.find(query);
+      const jobs = await cursor.toArray();
+      res.send(jobs);
     });
 
     app.post("/api/jobs", async (req, res) => {
@@ -52,10 +51,25 @@ async function run() {
       res.send(result);
     });
 
+    // company api
 
+    app.get("/api/my/companies", async (req, res) => {
+      const query = {};
+      if (req.query.recruiterId) {
+        query.recruiterId = req.query.recruiterId;
+      }
+      const result = await companyCollection.findOne(query);
+      res.send(result);
+    });
+
+    app.post("/api/companies", async (req, res) => {
+      const company = req.body;
+      const result = await companyCollection.insertOne(company);
+      res.send(result);
+    });
 
     // Send a ping to confirm a successful connection
-    await client.db("admin").command({ ping: 1 });
+    // await client.db("admin").command({ ping: 1 });
     console.log(
       "Pinged your deployment. You successfully connected to MongoDB!",
     );
