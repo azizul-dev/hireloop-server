@@ -48,6 +48,9 @@ async function run() {
       if (req.query.companyId) {
         query.companyId = req.query.companyId;
       }
+      if (req.query.recruiterId) {
+        query.recruiterId = req.query.recruiterId;
+      }
       if (req.query.status) {
         query.status = req.query.status;
       }
@@ -102,6 +105,12 @@ async function run() {
 
     // company api
 
+    app.get("/api/companies", async (req, res) => {
+      const cursor = companyCollection.find();
+      const result = await cursor.toArray();
+      res.send(result);
+    });
+
     app.get("/api/my/companies", async (req, res) => {
       const query = {};
       if (req.query.recruiterId) {
@@ -115,6 +124,19 @@ async function run() {
       const company = req.body;
       const result = await companyCollection.insertOne(company);
       res.send(result);
+    });
+
+    app.patch("/api/companies/:id", async (req, res) => {
+      const id = req.params.id;
+      const updatedCompany = req.body;
+      const filter = { _id: new ObjectId(id) };
+      const updateDoc = {
+        $set: {
+          status: updatedCompany.status,
+        },
+      };
+      const result = await companyCollection.updateOne(filter, updateDoc);
+      rs.send(result);
     });
 
     // plans
@@ -132,22 +154,24 @@ async function run() {
     app.post("/api/subscriptions", async (req, res) => {
       const data = req.body;
       console.log("Incoming Data:", data);
-      
+
       const subsInfo = {
         ...data,
         createdAt: new Date(),
       };
       const result = await subscriptionCollection.insertOne(subsInfo);
 
-      const filter = { _id: new ObjectId(data.userId), };
+      const filter = { _id: new ObjectId(data.userId) };
       const updateDocument = {
         $set: {
           plan: data.planId,
         },
       };
 
-      
-      const updateResult = await userCollection.updateOne(filter, updateDocument);
+      const updateResult = await userCollection.updateOne(
+        filter,
+        updateDocument,
+      );
       console.log("Update Result:", updateResult);
       res.send(updateResult);
     });
