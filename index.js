@@ -105,11 +105,39 @@ async function run() {
 
     // company api
 
+    // app.get("/api/companies", async (req, res) => {
+    //   const cursor = companyCollection.find();
+    //   const result = await cursor.toArray();
+    //   res.send(result);
+    // });
+
     app.get("/api/companies", async (req, res) => {
       const cursor = companyCollection.find();
+      const companies = await cursor.toArray();
+
+      for (const company of companies) {
+        const filter = {
+          companyId: company._id.toString(),
+        };
+        const jobCount = await jobCollection.countDocuments(filter);
+        company.jobCount = jobCount;
+      }
+      res.send(companies);
+    });
+    app.get("/api/companies2", async (req, res) => {
+      const pipeline = [
+        {
+          $set: 4
+        }
+      ];
+      const cursor = companyCollection.aggregate(pipeline);
       const result = await cursor.toArray();
       res.send(result);
     });
+
+
+
+
 
     app.get("/api/my/companies", async (req, res) => {
       const query = {};
@@ -136,7 +164,7 @@ async function run() {
         },
       };
       const result = await companyCollection.updateOne(filter, updateDoc);
-      rs.send(result);
+      res.send(result);
     });
 
     // plans
