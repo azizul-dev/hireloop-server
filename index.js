@@ -56,12 +56,19 @@ async function run() {
       const query = { token: token };
       const session = await sessionCollection.findOne(query);
 
+      if (!session) {
+        return res.status(401).send({ message: "unauthorized access" });
+      }
+
       const userId = session.userId;
 
       const userQuery = {
         _id: userId,
       };
       const user = await userCollection.findOne(userQuery);
+      if (!user) {
+        return res.status(401).send({ message: "unauthorized access" });
+      }
       req.user = user;
       next();
     };
@@ -72,7 +79,7 @@ async function run() {
       }
       next();
     };
-    
+
     const verifyRecruiter = async (req, res, next) => {
       if (req.user?.role !== "recruiter") {
         return res.status(403).send({ message: "forbidden access" });
@@ -87,12 +94,12 @@ async function run() {
       next();
     };
 
-    // user api
-    app.get("/api/users", async (req, res) => {
-      const cursor = userCollection.find().skip(6);
-      const result = await cursor.toArray();
-      res.send(result);
-    });
+    // // user api
+    // app.get("/api/users", async (req, res) => {
+    //   const cursor = userCollection.find().skip(6);
+    //   const result = await cursor.toArray();
+    //   res.send(result);
+    // });
 
     app.get("/api/jobs", async (req, res) => {
       const query = {};
