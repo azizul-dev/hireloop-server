@@ -102,7 +102,15 @@ async function run() {
     // });
 
     app.get("/api/jobs", async (req, res) => {
+      console.log("server side q", req.query);
       const query = {};
+
+      if (req.query.jobType) {
+        query.type = req.query.jobType;
+      }
+
+      
+
       if (req.query.companyId) {
         query.companyId = req.query.companyId;
       }
