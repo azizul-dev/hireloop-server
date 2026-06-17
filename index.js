@@ -104,12 +104,22 @@ async function run() {
     app.get("/api/jobs", async (req, res) => {
       console.log("server side q", req.query);
       const query = {};
+      if (req.query.search) {
+        query.$or = [
+          { title: { $regex: req.query.search, $options: "i" } },
+          { companyName: { $regex: req.query.search, $options: "i" } },
+        ];
+      }
 
       if (req.query.jobType) {
         query.type = req.query.jobType;
       }
 
-      
+      if (req.query.isRemote) {
+        query.isRemote = req.query.isRemote === "true";
+      }
+
+      console.log("Mongo Query:", query);
 
       if (req.query.companyId) {
         query.companyId = req.query.companyId;
@@ -120,8 +130,21 @@ async function run() {
       if (req.query.status) {
         query.status = req.query.status;
       }
+
+      if (req.query.page) {
+        const page = req.query.page;
+        const perPage = req.query.perPage || 12;
+        const skipItems = (page - 1) * perPage;
+
+        const cursor = jobCollection.find(query).skip(skipItems).limit(perPage);
+        const jobs = await cursor.toArray();
+        return res.send(jobs);
+      }
+
       const cursor = jobCollection.find(query);
       const jobs = await cursor.toArray();
+      console.log("Found Jobs:", jobs.length);
+
       res.send(jobs);
     });
 
@@ -131,6 +154,7 @@ async function run() {
         _id: new ObjectId(id),
       };
       const result = await jobCollection.findOne(query);
+      console.log(jobs[0]);
       res.send(result);
     });
 
@@ -138,6 +162,8 @@ async function run() {
       const job = req.body;
       const newJob = {
         ...job,
+        companyName: company.name,
+        companyLogo: company.logo,
         createdAt: new Date(),
       };
       const result = await jobCollection.insertOne(newJob);
